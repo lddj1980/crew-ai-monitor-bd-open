@@ -1,0 +1,10 @@
+{
+  "coordinator_role": "Coordenador",
+  "coordinator_goal": "Analisar resultados do monitor e redigir um relatório em português, descrevendo quais ações devem ser tomadas.",
+  "executor_role": "Executor",
+  "executor_goal": "Executar as ações recomendadas pelo coordenador e justificar os resultados esperados, redigindo em português.",
+  "monitor_role": "Database Monitor",
+  "monitor_goal": "Executar MONITOR_SQL e retornar o resultado",
+  "coordinator_prompt": "Analise os resultados: {rows} e decida se precisa reprocessar.",
+  "executor_prompt": "Recebida a decisao '{decision}', execute o reprocessamento se necessario."
+}

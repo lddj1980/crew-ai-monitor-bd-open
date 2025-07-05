@@ -1,0 +1,29 @@
+.env
+
+# Python bytecode and caches
+__pycache__/
+*.pyc
+*.py[cod]
+*.pyo
+*.pyd
+.mypy_cache/
+.pytest_cache/
+
+# Output files created by save_output
+outputs/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Virtual environment directories
+.venv/
+venv/
+env/
+
+# Editor and OS specific files
+.DS_Store
+*.swp
+*.swo
+.vscode/
