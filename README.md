@@ -1,70 +1,58 @@
 # crew-ai-monitor-bd
 
+Example project using **CrewAI** with the **OpenAI** API to monitor databases and execute reprocessing routines. The workflow is driven by three autonomous agents that run sequentially.
 
-To run this project you will need to provide your LLM API credentials locally.
-1. Copy `.env.example` to `.env`.
-2. Keep the `.env` file out of version control.
-3. Set `MONITOR_SQL` with the SQL statement you want the monitoring agent to execute. Optionally, set `DATABASE_URI` to define the database connection string.
-4. Provide your OpenAI key in `OPENAI_API_KEY`.
-5. `PROMPTS_FILE` sets the JSON file containing the agents' prompts (defaults to `prompts.json`).
-6. `OUTPUT_DIR` defines where each agent writes its output files (defaults to `outputs`).
-7. `LLM_TEMPERATURE` controls the randomness of the model (defaults to `0`).
-8. `OPENAI_MODEL` chooses the OpenAI model (defaults to `gpt-3.5-turbo`).
-9. `RUN_INTERVAL_MINUTES` sets how often the workflow runs (defaults to `1`).
+## Overview
 
-The `get_llm` helper reads these variables to construct the language model.
-It requires `OPENAI_API_KEY` and returns a `ChatOpenAI` instance configured with
-`OPENAI_MODEL` and `LLM_TEMPERATURE`.
+The `main.py` script schedules `run_once()` to run at fixed intervals. At each run the configured SQL is executed, its result is analyzed and then an action is taken. Every step relies on an OpenAI model to interpret results and generate text.
 
+### Agent Diagram
+```mermaid
+flowchart TD
+    Schedule["Scheduler"] -->|RUN_INTERVAL_MINUTES| RunOnce
+    subgraph Crew
+        Monitor["Monitor Agent"] --> Coordinator["Coordinator Agent"]
+        Coordinator --> Executor["Executor Agent"]
+    end
+    RunOnce --> Monitor
+    Executor --> Output["Files in OUTPUT_DIR"]
 ```
+
+## Quick Setup
+
+1. Install the dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. Copy `.env.example` to `.env` and fill in the variables. At minimum `OPENAI_API_KEY` and `MONITOR_SQL` must be provided.
+3. Run the workflow:
+   ```bash
+   python main.py
+   ```
+
+The script runs continuously according to `RUN_INTERVAL_MINUTES`. Outputs from each agent are saved under `OUTPUT_DIR`.
+
+## Key Environment Variables
+
+- `MONITOR_SQL` &ndash; SQL query to be executed.
+- `DATABASE_URI` &ndash; database connection string (defaults to local SQLite).
+- `OPENAI_API_KEY` &ndash; your OpenAI API key.
+- `OPENAI_MODEL` &ndash; model to use (defaults to `gpt-3.5-turbo`).
+- `LLM_TEMPERATURE` &ndash; controls randomness of the answers.
+- `PROMPTS_FILE` &ndash; path to the JSON file with agent prompts.
+- `OUTPUT_DIR` &ndash; folder where log files will be stored.
+- `RUN_INTERVAL_MINUTES` &ndash; interval between workflow executions.
+
+Basic example of `.env`:
+```env
 MONITOR_SQL=SELECT COUNT(*) FROM users;
 DATABASE_URI=postgresql+psycopg2://user:pass@localhost/db
+OPENAI_API_KEY=sk-...
 ```
 
-### Schemas
+## Customizing Prompts
 
-`DATABASE_URI` picks the database but does **not** set the schema. If your tables
-reside outside the default `public` schema, reference them explicitly or adjust
-the connection `search_path`:
-
-```
-MONITOR_SQL=SELECT * FROM public.produto
-DATABASE_URI=postgresql+psycopg2://user:pass@localhost/dbname?options=-csearch_path%3Dmyschema
-```
-
-### Temporary database for tests
-
-For an ephemeral setup you can point `DATABASE_URI` to an in-memory SQLite
-database:
-
-```
-DATABASE_URI=sqlite:///:memory:
-```
-
-After copying `.env.example` to `.env` and adjusting the values you can run the
-workflow with:
-
-```bash
-python main.py
-```
-
-The query can be executed using `execute_monitor_sql`:
-
-```python
-from crewai_config.monitor_agent import execute_monitor_sql
-
-result = execute_monitor_sql()
-print(result)
-```
-
-Placeholders are replaced using values from the first row of the result.
-
-Example `prompts.json`
-----------------------
-
-The prompts file can define custom messages for the agents. The text may
-contain placeholders that are replaced when the workflow runs.
-
+The `prompts.json` file defines messages and goals for each agent. Placeholders such as `{rows}` and `{decision}` are substituted automatically. Example:
 ```json
 {
   "coordinator_prompt": "Analise os resultados: {rows} e decida se precisa reprocessar.",
@@ -72,11 +60,17 @@ contain placeholders that are replaced when the workflow runs.
 }
 ```
 
-Available placeholders:
+### Summary Flow
+```mermaid
+sequenceDiagram
+    participant Scheduler
+    participant Monitor
+    participant Coordinator
+    participant Executor
+    Scheduler->>Monitor: Run MONITOR_SQL
+    Monitor->>Coordinator: Result as text
+    Coordinator->>Executor: Decision and instructions
+    Executor-->>Scheduler: Final report
+```
 
-* `{rows}` &ndash; list of dictionaries returned by `parse_sql_result`.
-* Column names from the first row of the result, for example `{count}`.
-* `{decision}` &ndash; the decision text produced by the coordinator agent.
-
-All placeholders are filled with values obtained from `parse_sql_result` in
-`main.py` before being sent to the agents.
+This provides a starting point for creating automated monitoring and response routines using only OpenAI infrastructure.
