@@ -3,23 +3,18 @@
 
 To run this project you will need to provide your LLM API credentials locally.
 1. Copy `.env.example` to `.env`.
-2. Fill in `LLM_CLIENT_ID` and `LLM_CLIENT_SECRET` with your real values inside `.env`.
-3. Keep the `.env` file out of version control.
-4. Set `MONITOR_SQL` with the SQL statement you want the monitoring agent to execute. Optionally, set `DATABASE_URI` to define the database connection string.
-5. Optionally, set `SERPRO_CA_BUNDLE` with the path to a trusted certificate bundle if your environment requires a custom CA. SSL verification is enabled by default.
-6. If `OPENAI_API_KEY` is defined the agents will use OpenAI; otherwise the proprietary LLM is used.
-7. `PROMPTS_FILE` sets the JSON file containing the agents' prompts (defaults to `prompts.json`).
-8. `OUTPUT_DIR` defines where each agent writes its output files (defaults to `outputs`).
-9. `LLM_MODEL` selects the proprietary LLM model when `OPENAI_API_KEY` is not set (defaults to `mistral-nemo-instruct`).
-10. `LLM_TEMPERATURE` controls the randomness of the model for both backends (defaults to `0`).
-11. `OPENAI_MODEL` chooses the OpenAI model when `OPENAI_API_KEY` is provided (defaults to `gpt-3.5-turbo`).
-12. `RUN_INTERVAL_MINUTES` sets how often the workflow runs (defaults to `1`).
+2. Keep the `.env` file out of version control.
+3. Set `MONITOR_SQL` with the SQL statement you want the monitoring agent to execute. Optionally, set `DATABASE_URI` to define the database connection string.
+4. Provide your OpenAI key in `OPENAI_API_KEY`.
+5. `PROMPTS_FILE` sets the JSON file containing the agents' prompts (defaults to `prompts.json`).
+6. `OUTPUT_DIR` defines where each agent writes its output files (defaults to `outputs`).
+7. `LLM_TEMPERATURE` controls the randomness of the model (defaults to `0`).
+8. `OPENAI_MODEL` chooses the OpenAI model (defaults to `gpt-3.5-turbo`).
+9. `RUN_INTERVAL_MINUTES` sets how often the workflow runs (defaults to `1`).
 
-The `get_llm` helper reads these variables to construct the language model. If
-`OPENAI_API_KEY` is set, it returns a `ChatOpenAI` instance configured with
-`OPENAI_MODEL` and `LLM_TEMPERATURE`. Otherwise it creates `MyEnterpriseLLM`
-using `LLM_MODEL`, `LLM_CLIENT_ID`, `LLM_CLIENT_SECRET`, and the same
-temperature value.
+The `get_llm` helper reads these variables to construct the language model.
+It requires `OPENAI_API_KEY` and returns a `ChatOpenAI` instance configured with
+`OPENAI_MODEL` and `LLM_TEMPERATURE`.
 
 ```
 MONITOR_SQL=SELECT COUNT(*) FROM users;
