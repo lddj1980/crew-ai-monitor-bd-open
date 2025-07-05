@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 
 def load_env(path: str = ".env"):
-    """Carrega variáveis de ambiente de um arquivo."""
+    """Load environment variables from a file."""
     if os.path.exists(path):
         load_dotenv(path)
 
@@ -51,7 +51,7 @@ def get_llm():
 
 
 def load_prompts(path: str = "prompts.json"):
-    """Carrega os prompts dos agentes de um arquivo JSON."""
+    """Load agent prompts from a JSON file."""
     if not os.path.exists(path):
         raise FileNotFoundError(f"Prompts file not found: {path}")
     with open(path, "r", encoding="utf-8") as f:
