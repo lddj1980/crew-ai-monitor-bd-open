@@ -4,11 +4,10 @@ from dotenv import load_dotenv
 
 
 def load_env(path: str = ".env"):
-    """Carrega variáveis de ambiente de um arquivo."""
+    """Load environment variables from a file."""
     if os.path.exists(path):
         load_dotenv(path)
 
-from .my_enterprise_llm import MyEnterpriseLLM
 from langchain_openai import ChatOpenAI
 
 from langchain_community.utilities.sql_database import SQLDatabase
@@ -40,27 +39,19 @@ def parse_sql_result(raw: str):
 
 
 def get_llm():
-    """Retorna o LLM apropriado.
+    """Return the OpenAI LLM configured via environment variables."""
 
-    Se ``OPENAI_API_KEY`` estiver definido usa ``ChatOpenAI``; caso contrário,
-    utiliza ``MyEnterpriseLLM``.
-    """
     temperature = float(os.environ.get("LLM_TEMPERATURE", "0"))
-    openai_key = os.environ.get("OPENAI_API_KEY")
-    if openai_key:
-        model = os.environ.get("OPENAI_MODEL", "gpt-3.5-turbo")
-        return ChatOpenAI(api_key=openai_key, model=model, temperature=temperature)
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        raise EnvironmentError("OPENAI_API_KEY is not set")
 
-    return MyEnterpriseLLM(
-        model=os.environ.get("LLM_MODEL", "mistral-nemo-instruct"),
-        client_id=os.environ.get("LLM_CLIENT_ID", ""),
-        client_secret=os.environ.get("LLM_CLIENT_SECRET", ""),
-        temperature=temperature,
-    )
+    model = os.environ.get("OPENAI_MODEL", "gpt-3.5-turbo")
+    return ChatOpenAI(api_key=api_key, model=model, temperature=temperature)
 
 
 def load_prompts(path: str = "prompts.json"):
-    """Carrega os prompts dos agentes de um arquivo JSON."""
+    """Load agent prompts from a JSON file."""
     if not os.path.exists(path):
         raise FileNotFoundError(f"Prompts file not found: {path}")
     with open(path, "r", encoding="utf-8") as f:
