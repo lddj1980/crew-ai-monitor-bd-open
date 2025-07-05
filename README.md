@@ -1,10 +1,10 @@
 # crew-ai-monitor-bd
 
-Example project using **CrewAI** with the **OpenAI** API to monitor databases and execute reprocessing routines. The workflow is driven by three autonomous agents that run sequentially.
+Example project using **CrewAI** with the **OpenAI** API to monitor databases and trigger automated actions. Three autonomous agents work together to interpret query results and decide what to do next.
 
 ## Overview
 
-The `main.py` script schedules `run_once()` to run at fixed intervals. At each run the configured SQL is executed, its result is analyzed and then an action is taken. Every step relies on an OpenAI model to interpret results and generate text.
+The `main.py` script schedules `run_once()` to run at fixed intervals. In each cycle a SQL query is executed, the result is analyzed and a follow-up action is triggered. Every step relies on an OpenAI model to interpret results and generate text.
 
 ### Agent Diagram
 ```mermaid
@@ -12,10 +12,10 @@ flowchart TD
     Schedule["Scheduler"] -->|RUN_INTERVAL_MINUTES| RunOnce
     subgraph Crew
         Monitor["Monitor Agent"] --> Coordinator["Coordinator Agent"]
-        Coordinator --> Executor["Executor Agent"]
+        Coordinator --> Action["Action Agent"]
     end
     RunOnce --> Monitor
-    Executor --> Output["Files in OUTPUT_DIR"]
+    Action --> Output["Actions (files or integrations)"]
 ```
 
 ## Quick Setup
@@ -52,11 +52,11 @@ OPENAI_API_KEY=sk-...
 
 ## Customizing Prompts
 
-The `prompts.json` file defines messages and goals for each agent. Placeholders such as `{rows}` and `{decision}` are substituted automatically. Example:
+The `prompts.json` file defines messages and goals for each agent. Placeholders such as `{rows}` and `{decision}` are substituted automatically. A minimal example could be:
 ```json
 {
-  "coordinator_prompt": "Analise os resultados: {rows} e decida se precisa reprocessar.",
-  "executor_prompt": "Recebida a decisao '{decision}', execute o reprocessamento se necessario."
+  "coordinator_prompt": "Analise os resultados: {rows} e descreva a ação necessária.",
+  "executor_prompt": "Recebida a decisão '{decision}', realize a ação indicada."
 }
 ```
 
@@ -66,11 +66,22 @@ sequenceDiagram
     participant Scheduler
     participant Monitor
     participant Coordinator
-    participant Executor
+    participant ActionAgent
     Scheduler->>Monitor: Run MONITOR_SQL
     Monitor->>Coordinator: Result as text
-    Coordinator->>Executor: Decision and instructions
-    Executor-->>Scheduler: Final report
+    Coordinator->>ActionAgent: Decision and instructions
+    ActionAgent-->>Scheduler: Final report
 ```
 
 This provides a starting point for creating automated monitoring and response routines using only OpenAI infrastructure.
+
+## Potential Extensions
+
+The current implementation writes the results from each agent to text files. In a real-world deployment the same decisions could be used to:
+
+- invoke external APIs or microservices
+- send email or WhatsApp notifications
+- trigger business workflows when certain conditions are met
+- gather customer feedback after a specific event, such as asking a traveller to review an itinerary when they return from a trip
+
+By adapting the executor agent you can integrate virtually any action into the workflow.
